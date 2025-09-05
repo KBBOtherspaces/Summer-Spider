@@ -1,37 +1,51 @@
-// ./app/api/chat/route.ts
-import OpenAI from 'openai'
-import { OpenAIStream, StreamingTextResponse } from 'ai'
+import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
 
-// Create an OpenAI API client (that's edge friendly!)
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || ''
-})
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-// IMPORTANT! Set the runtime to edge
-export const runtime = 'edge'
+export async function POST(request: NextRequest) {
+  try {
+    const { message } = await request.json();
 
-export async function POST(req: Request) {
-  // Extract the `prompt` from the body of the request
-  const { messages } = await req.json()
+    if (!message) {
+      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+    }
 
-  // Ask OpenAI for a streaming chat completion given the prompt
-  const response = await openai.chat.completions.create({
-    model: 'ft:gpt-3.5-turbo-1106:kbbotherspaces:summerspider:CCDmwGsQ',
-    stream: true,
-    messages: [
-      {
-        role: 'system',
-        // Note: This has to be the same system prompt as the one
-        // used in the fine-tuning dataset
-        content:
-          "You are the user's orator, responding with poetry musing on nature, feeling, lived experiences and reflecting unkowns and desire with playful and varied intonation."
-      },
-      ...messages
-    ]
-  })
+    // Call your fine-tuned model here
+    const completion = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL_ID || "gpt-3.5-turbo", // Use your fine-tuned model ID
+      messages: [
+        {
+          role: "system",
+          content: "You are a spider season poet. You bend language to signal new forms in poem and verse. Respond with creative, poetic language that weaves words like a spider weaves silk."
+        },
+        {
+          role: "user",
+          content: message
+        }
+      ],
+      max_tokens: 150,
+      temperature: 0.8,
+    });
 
-  // Convert the response into a friendly text-stream
-  const stream = OpenAIStream(response)
-  // Respond with the stream
-  return new StreamingTextResponse(stream)
+    const response = completion.choices[0]?.message?.content || "The web of words tangles...";
+    
+    return NextResponse.json({ response });
+    
+  } catch (error: any) {
+    console.error('API Error:', error);
+    
+    // Handle different types of OpenAI errors
+    if (error.code === 'model_not_found') {
+      return NextResponse.json({ 
+        response: "The spider model rests... using backup weaving patterns." 
+      });
+    }
+    
+    return NextResponse.json({ 
+      response: "The constellation dims... let me try again." 
+    });
+  }
 }
