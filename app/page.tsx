@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spider Season Poet Weaver</title>
+  <title>Summer Spider Poet Weaver</title>
   <style>
     body, html {
       margin: 0;
@@ -287,7 +287,7 @@
         addMessage(message, true);
         messageInput.value = '';
         
-        // Simulate bot response (in a real app, this would be your API call)
+        // Simulate bot response ( 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)
         setTimeout(() => {
           addMessage("I'm a poetry chatbot with a spider constellation in the night sky. Can I spin you a verse or 8?", false);
         }, 1000);
